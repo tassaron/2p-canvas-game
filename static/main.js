@@ -39,7 +39,7 @@ function preload_success() {
 }
 
 sprites.explosion.addEventListener("load", preload_success)
-sprites.explosion.src = "assets/explosion.png";
+sprites.explosion.src = "static/assets/explosion.png";
 
 
 function pauseGame() {

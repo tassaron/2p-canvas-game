@@ -1,17 +1,25 @@
-import { WorldScene } from "./world.js";
+import { LobbyScene } from "./lobby.js";
 import { Button } from "../button.js";
+
+const SERVER = "";
 
 export class MenuScene {
     constructor(game) {
-        this.button = new StartButton(game, game.ctx.canvas.width / 2 - 128, game.ctx.canvas.height / 2 - 32);
         this.game = game;
+        this.button = new StartButton(game, game.ctx.canvas.width / 2 - 128, game.ctx.canvas.height / 2 - 32);
     }
 
     update(ratio, keyboard, mouse) {
-        let changeScene = function(self) {
-            self.game.changeScene(new WorldScene(self.game));
-        }
-        this.button.update(ratio, keyboard, mouse, changeScene, this);
+        let requestNewRoom = function(self) {
+            fetch(
+                `${SERVER}/newroom`
+            ).then(
+                response => response.ok ? response.json() : null
+            ).then(
+                data => self.game.changeScene(new LobbyScene(data))
+            )
+        };
+        this.button.update(ratio, keyboard, mouse, requestNewRoom, this);
     }
 
     draw(ctx, drawSprite) {

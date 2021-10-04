@@ -51,6 +51,7 @@ export class Game {
     }
 
     changeScene(scene) {
+        scene.game = this;
         let prevScene = this.scene;
         this.prevScene = prevScene;
         this.allowUserInput = false;

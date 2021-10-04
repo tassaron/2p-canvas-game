@@ -3,8 +3,7 @@ import { AnimatedThing } from "../thing.js";
 import { Grid } from "../grid.js";
 
 export class WorldScene {
-    constructor(game) {
-        this.game = game;
+    constructor() {
         this.button = new BoomButton(32, game.ctx.canvas.height - 132);
         this.grid = new Grid(game.ctx.canvas.width / 2, 32, 3, 3, 32, Boom);
     }
