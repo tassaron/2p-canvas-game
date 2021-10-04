@@ -16,17 +16,14 @@ LOG = logging.getLogger(__name__)
 #    SESSION_COOKIE_HTTPONLY=True,
 #    SESSION_COOKIE_SAMESITE="Lax",
 #)
-
+rooms = {}
 
 class GameRoom:
-    roomcodes = []
-
     @classmethod
     def new_room(cls):
         rid = four_letter_code()
-        while rid in GameRoom.roomcodes:
+        while rid in rooms.keys():
             rid = four_letter_code()
-        GameRoom.roomcodes.append(rid)
         return rid
 
     def __init__(self):
@@ -62,11 +59,35 @@ def newroom():
     response = flask.make_response(
         {
             "rid": new_room.rid,
-            "uid": new_room.uid1,
+            "uid1": new_room.uid1,
+            "uid2": new_room.uid2,
+        },
+        200,
+    )
+    rooms[new_room.rid] = new_room
+    return response
+
+
+@app.route("/joinroom", methods=["POST"])
+def joinroom():
+    data = flask.request.get_json()
+    data = data[:4]
+    for letter in data:
+        if letter not in ascii_uppercase:
+            flask.abort(400)
+    if data not in rooms.keys():
+        flask.abort(404)
+    rooms[data].uid2 = uuid4()
+    response = flask.make_response(
+        {
+            "rid": rooms[data].rid,
+            "uid1": rooms[data].uid1,
+            "uid2": rooms[data].uid2,
         },
         200,
     )
     return response
+
 
 @app.route("/")
 def index():

@@ -1,7 +1,10 @@
 export class LobbyScene {
     constructor(data) {
-        this.rid = data["rid"];
         this.drawn = false;
+        if (data === null) {return}
+        this.rid = data["rid"];
+        this.uid1 = data["uid1"];
+        this.uid2 = data["uid2"];
     }
 
     update(ratio, keyboard, mouse) {
@@ -20,6 +23,7 @@ export class LobbyScene {
             text = `Room Code: ${this.rid}`;
         }
         ctx.fillText(text, ctx.canvas.width/2-(ctx.measureText(text).width/2), ctx.canvas.height/2);
+        console.log(`${this.uid1}${this.uid2}`);
         this.drawn = true;
     }
 }
