@@ -25,6 +25,7 @@ export class Game {
             this.timer[0] -= ratio;
         } else if (this.timer[0] < 0.0) {
             this.timer[0] = 0.0;
+            console.log("calling timer")
             this.timer[1](this.timer[2]);
         }
         if (!this.allowUserInput) {
@@ -33,13 +34,13 @@ export class Game {
         }
         this.scene.update(ratio, keyboard, mouse);
         then = Date.now();
-        if (!this.game_over && keyboard.p) {this.paused = !this.paused}
+        /*if (!this.game_over && keyboard.p) {this.paused = !this.paused}
         if (this.paused && this.scene.isPausedScene !== true) {
             this.changeScene(new PauseScene(this, this.ctx));
         } else if (!this.paused && this.scene.isPausedScene) {
             let scene = this.prevScene;
             this.changeScene(scene);
-        }
+        }*/
     }
 
     draw(ctx, drawSprite) {
@@ -47,6 +48,7 @@ export class Game {
     }
 
     setTimer(frames, func, self) {
+        console.log("setting timer")
         this.timer = [frames, func, self]
     }
 

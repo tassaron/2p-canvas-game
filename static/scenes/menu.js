@@ -48,14 +48,14 @@ export class MenuScene {
         self.inputbox.setAttribute("id", "field");
         self.inputbox.setAttribute(
             "style",
-            "position: absolute; bottom: 170px; left: 225px;" 
+            "position: absolute; bottom: 320px; left: 356px;" 
         )
         self.inputlabel = document.createElement("label");
         self.inputlabel.setAttribute("for", "field");
         self.inputlabel.innerHTML = "ENTER ROOM CODE"
         self.inputlabel.setAttribute(
             "style",
-            "color:black; font-size: 14pt; position: absolute; bottom: 200px; left: 235px;" 
+            "color:black; font-size: 14pt; position: absolute; bottom: 350px; left: 370px;" 
         )
         gamediv.appendChild(self.inputbox);
         gamediv.appendChild(self.inputlabel);

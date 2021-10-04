@@ -1,5 +1,5 @@
 """
-Turns a .bat file into a website for some reason
+
 """
 import flask
 import os
@@ -30,7 +30,7 @@ class GameRoom:
         self.rid = GameRoom.new_room()
         self.uid1 = uuid4()
         self.uid2 = None
-        self.turns = 0
+        self.turn = 0
         self.gamestate = {}
 
 
@@ -41,16 +41,38 @@ def is_valid(gamestate):
 def four_letter_code():
     return "".join([random.choice(ascii_uppercase) for _ in range(4)])
 
-@app.route("/input", methods=["POST"])
-def send_input():
-    new_input = flask.request.get_json()
-    if not is_valid(new_input):
-        flask.abort(401)
-    response = flask.make_response(
-        {},
-        200,
-    )
-    return response
+
+@app.route("/lobby", methods=["POST"])
+def refreshlobby():
+    """Called by uid1 while waiting for uid2 to join the room"""
+    data = flask.request.get_json()
+    try:
+        room = rooms[data["rid"]]
+        if data["uid"] != str(room.uid1):
+            flask.abort(401)
+        return { "uid": room.uid2 }
+    except KeyError:
+        flask.abort(400)
+
+
+@app.route("/refresh", methods=["POST"])
+def refreshgame():
+    data = flask.request.get_json()
+    room = rooms[data["rid"]]
+    return {
+        "rid": room.rid,
+        "turn": room.turn,
+        "gamestate": room.gamestate,
+    }, 200
+
+
+@app.route("/update", methods=["POST"])
+def updategame():
+    data = flask.request.get_json()
+    room = rooms[data["rid"]]
+    room.gamestate = data["gamestate"]
+    room.turn += 1
+    return {}, 200
 
 
 @app.route("/newroom")
@@ -71,7 +93,7 @@ def newroom():
 @app.route("/joinroom", methods=["POST"])
 def joinroom():
     data = flask.request.get_json()
-    data = data[:4]
+    data = data[:4].upper()
     for letter in data:
         if letter not in ascii_uppercase:
             flask.abort(400)
@@ -86,6 +108,7 @@ def joinroom():
         },
         200,
     )
+    rooms[data].turn = 1
     return response
 
 

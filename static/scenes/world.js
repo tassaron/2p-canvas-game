@@ -1,58 +1,115 @@
 import { Button } from "../button.js";
 import { AnimatedThing } from "../thing.js";
-import { Grid } from "../grid.js";
+
+const SERVER = "";
 
 export class WorldScene {
-    constructor() {
-        this.button = new BoomButton(32, game.ctx.canvas.height - 132);
-        this.grid = new Grid(game.ctx.canvas.width / 2, 32, 3, 3, 32, Boom);
+    constructor(game, rid, odd_turns, uid) {
+        this.turnButton = new EndTurnButton(game, game.ctx.canvas.width - 100, game.ctx.canvas.height - 100);
+        this.explosion = new Boom(300, 100);
+        this.odd_turns = odd_turns;
+        this.uid = uid;
+        this.rid = rid;
+        this.turn = 1;
+        this.loading = false;
+        if (!this.odd_turns) {this.turnButton.text = "..."}
     }
 
     update(ratio, keyboard, mouse) {
-        this.grid.update(ratio, keyboard, mouse);
-        this.button.update(ratio, keyboard, mouse);
-        if (this.button.boom != null) {
-            this.game.gameOver();
+        this.explosion.update(ratio, keyboard, mouse);
+        if (this.isMyTurn()) {
+            this.turnButton.update(ratio, keyboard, mouse, this.endTurn, this);
+        } else if (this.game.timer[0] == 0.0) {
+            this.game.setTimer(600.0, this.syncWithServer, this);
         }
     }
 
     draw(ctx, drawSprite) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        this.grid.draw(ctx, drawSprite);
-        this.button.draw(ctx, drawSprite);
-    }
-}
-
-class BoomButton extends Button {
-    constructor(x, y) {
-        let outline = "rgba(0, 0, 0, 1.0)";
-        let colour = "rgba(0, 155, 45, 1.0)";
-        super(x, y, 280, 100, "Game Over", outline, colour);
-        this.boom = null;
+        this.explosion.draw(ctx, drawSprite);
+        this.turnButton.draw(ctx, drawSprite);
     }
 
-    update(ratio, keyboard, mouse) {
-        Button.prototype.update.call(this, ratio, keyboard, mouse, this.spawnBoom, this);
-        if (this.boom != null) {
-            this.boom.update(ratio, keyboard, mouse);
-            if (this.boom.loops > 0) {this.boom = null}
-        }
+    isMyTurn() {
+        return ((this.odd_turns && this.turn % 2 != 0) || (!this.odd_turns && this.turn % 2 == 0))
     }
 
-    draw(ctx, drawSprite) {
-        Button.prototype.draw.call(this, ctx, drawSprite);
-        if (this.boom != null) {
-            this.boom.draw(ctx, drawSprite);
-        }
+    endTurn(self) {
+        self.turnButton.text = "...";
+        fetch(
+            `${SERVER}/update`, {
+			    method: "POST",
+			    credentials: "same-origin",
+ 			    body: JSON.stringify({
+                    "rid": self.rid,
+                    "uid": self.uid,
+                    "gamestate": {
+                        "explosion": self.explosion.x
+                    }
+                }),
+			    cache: "no-cache",
+			    headers: new Headers({
+				    "content-type": "application/json"
+			    })
+            }
+        ).then(
+            response => response.ok ? response.json() : null
+        ).then(
+            data => {
+                self.turn++;
+                self.game.setTimer(600.0, self.syncWithServer, self);
+            }
+        )
     }
 
-    spawnBoom(self) {
-        self.boom = new Boom(self.x + self.width / 2, self.y);
+    syncWithServer(self) {
+        fetch(
+            `${SERVER}/refresh`, {
+			    method: "POST",
+			    credentials: "same-origin",
+ 			    body: JSON.stringify({
+                    "rid": self.rid,
+                    "uid": self.uid
+                }),
+			    cache: "no-cache",
+			    headers: new Headers({
+				    "content-type": "application/json"
+			    })
+            }
+        ).then(
+            response => response.ok ? response.json() : null
+        ).then(
+            data => {
+                if (data === null) {return}
+                self.turn = data["turn"];
+                if (self.isMyTurn()) {
+                    self.turnButton.text = "End Turn";
+                    self.explosion.x = data["gamestate"]["explosion"];
+                }
+            }
+        )
     }
 }
 
 class Boom extends AnimatedThing {
     constructor(x, y) {
         super(x, y, 32, 32, 'explosion', 6, 4);
+    }
+
+    update(ratio, keyboard, mouse) {
+        super.update(ratio, keyboard, mouse);
+        if (mouse.leftClick && this.collides(mouse)) {
+            this.x += 10;
+        }
+    }
+}
+
+
+class EndTurnButton extends Button {
+    constructor(game, x, y) {
+        let outline = "rgba(0, 0, 0, 1.0)";
+        let colour = "rgba(0, 88, 88, 1.0)";
+        super(x, y, 100, 100, "End Turn", outline, colour);
+        this.game = game;
     }
 }
